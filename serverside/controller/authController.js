@@ -5,11 +5,11 @@ const User = require('./../models/userModel');
 //register user
 exports.signUp = async (req, res) => {
   try {
-    const user = User.create({
+    const user = await User.create({
       username: req.body.username,
       email: req.body.email,
       password: req.body.password,
-      confirmpassword: req.body.confirmpassword,
+      confirmPassword: req.body.confirmPassword,
     });
     res.status(201).json({
       status: 'success',
