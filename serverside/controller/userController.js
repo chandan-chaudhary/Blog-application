@@ -18,22 +18,22 @@ exports.getAllUser = async (req, res) => {
   }
 };
 
-exports.createUser = async (req, res) => {
-  try {
-    const user = await User.create(req.body);
-    res.status(200).json({
-      status: 'success',
-      data: {
-        user,
-      },
-    });
-  } catch (err) {
-    res.status(404).json({
-      status: 'fail',
-      message: err,
-    });
-  }
-};
+// exports.createUser = async (req, res) => {
+//   try {
+//     const user = await User.create(req.body);
+//     res.status(200).json({
+//       status: 'success',
+//       data: {
+//         user,
+//       },
+//     });
+//   } catch (err) {
+//     res.status(404).json({
+//       status: 'fail',
+//       message: err,
+//     });
+//   }
+// };
 
 exports.getUserbyId = async (req, res) => {
   try {
