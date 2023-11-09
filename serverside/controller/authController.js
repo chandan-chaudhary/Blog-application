@@ -1,5 +1,6 @@
 const bcrypt = require('bcryptjs');
 const sendMail = require('./../email');
+const crypto = require('crypto');
 
 const User = require('./../models/userModel');
 
@@ -49,25 +50,57 @@ exports.loginUser = async (req, res) => {
 };
 
 exports.forgotPassword = async (req, res) => {
+  const user = await User.findOne({ email: req.body.email });
+  if (!user) throw new Error('no user found');
+  const resetToken = user.resetPasswordToken();
+  await user.save({ validateBeforeSave: false });
+  const tokenURL = `${req.protocol}://${req.get(
+    'host'
+  )}/api/v1/users/resetpassword/${resetToken}`;
+  const message = `Please reset your password ${tokenURL}, valid for 10 min.\n If please ignore if already done`;
+  console.log('for', resetToken, user.passwordResetToken);
   try {
-    const user = await User.findOne({ email: req.body.email });
-    if (!user) throw new Error('no user found');
-    const resetToken = user.resetPasswordToken();
-    await user.save({ validateBeforeSave: false });
-    const tokenURL = `${req.protocol}://${req.get(
-      'host'
-    )}/api/v1/users/resetpassword/${resetToken}`;
-    const message = `Please reset your password ${tokenURL}, valid for 10 min.\n If please ignore if already done`;
-    console.log(tokenURL);
     await sendMail({
       email: user.email,
-      subject: 'passwowrd reset token ',
+      subject: 'password reset token ',
       message,
     });
 
     res.status(200).json({
       status: 'success',
       message: 'mail sent on gmail',
+    });
+  } catch (err) {
+    user.passwordResetToken = undefined;
+    user.passwordExpiresIn = undefined;
+    res.status(404).json({
+      status: 'fail',
+      message: err.message,
+    });
+  }
+};
+
+exports.resetPassword = async (req, res) => {
+  try {
+    // const token = req.params.token;
+    const recivedToken = crypto
+      .createHash('sha256')
+      .update(req.params.token)
+      .digest('hex');
+    const user = await User.findOne({
+      passwordResetToken: recivedToken,
+      passwordExpiresIn: { $gt: Date.now() },
+    });
+    console.log('>', req.params.token, recivedToken);
+    if (!user) throw new Error('no user match');
+    user.password = req.body.password;
+    user.confirmPassword = req.body.confirmPassword;
+    user.passwordResetToken = undefined;
+    user.passwordExpiresIn = undefined;
+    await user.save();
+    res.status(200).json({
+      status: 'success',
+      message: 'password has been changed',
     });
   } catch (err) {
     res.status(404).json({

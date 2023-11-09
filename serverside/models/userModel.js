@@ -36,8 +36,14 @@ const userSchema = new mongoose.Schema({
     type: String,
     default: '',
   },
-  createdAt: Date,
-  updatedAt: Date,
+  createdAt: {
+    type: Date,
+    default: Date.now(),
+  },
+  updatedAt: {
+    type: Date,
+    default: Date.now(),
+  },
   passwordResetToken: String,
   passwordExpiresIn: Date,
 });
@@ -57,11 +63,12 @@ userSchema.methods.resetPasswordToken = function () {
   // simple token
   const resetToken = crypto.randomBytes(32).toString('hex');
   // encrypt token
-  this.resetPasswordToken = crypto
+  this.passwordResetToken = crypto
     .createHash('sha256')
     .update(resetToken)
     .digest('hex');
-  console.log(resetToken, this.resetPasswordToken);
+  this.passwordExpiresIn = Date.now() + 10 * 60 * 1000; //into milisecond
+  console.log('mid', this.passwordResetToken);
   return resetToken;
 };
 const User = mongoose.model('User', userSchema);
