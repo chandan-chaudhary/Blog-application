@@ -40,7 +40,7 @@ const userSchema = new mongoose.Schema({
     type: Date,
     default: Date.now(),
   },
-  updatedAt: {
+  passwordUpdatedAt: {
     type: Date,
     default: Date.now(),
   },
@@ -48,6 +48,13 @@ const userSchema = new mongoose.Schema({
   passwordExpiresIn: Date,
 });
 
+userSchema.pre('save', function (next) {
+  if (!this.isModified('password') || this.isNew) return next();
+
+  this.passwordUpdatedAt = Date.now() - 1000;
+  console.log(this.passwordUpdatedAt);
+  next();
+});
 // Encrypt password
 userSchema.pre('save', async function (next) {
   if (!this.isModified('password')) return next();
@@ -70,6 +77,16 @@ userSchema.methods.resetPasswordToken = function () {
   this.passwordExpiresIn = Date.now() + 10 * 60 * 1000; //into milisecond
   console.log('mid', this.passwordResetToken);
   return resetToken;
+};
+
+// CHECK IF PASSWORD IS UPDATED after JWT IS SENT
+userSchema.methods.isPasswordUpdated = function (JWTTimestamp) {
+  if (this.passwordUpdatedAt) {
+    // get time into seconds
+    const passwordTimestamp = this.passwordUpdatedAt.getTime() / 1000;
+    return passwordTimestamp > JWTTimestamp;
+  }
+  return false;
 };
 const User = mongoose.model('User', userSchema);
 module.exports = User;

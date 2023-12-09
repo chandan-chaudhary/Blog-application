@@ -1,5 +1,5 @@
 const mongoose = require('mongoose');
-const User = require('../models/userModel');
+
 const postSchema = new mongoose.Schema({
   title: {
     type: String,
@@ -18,17 +18,30 @@ const postSchema = new mongoose.Schema({
   },
   description: {
     type: String,
-    required: [true, 'a post must have post details'],
+    required: [true, 'A post must have post details'],
   },
-  // user: {
-  //   type: mongoose.Schema.ObjectId,
-  //   ref: 'User',
-  //   required: [true, 'a post must belongs to user'],
-  // },
+  user: {
+    type: mongoose.Schema.ObjectId,
+    ref: 'User',
+    required: [true, 'A post must belongs to user'],
+  },
+  category: {
+    type: mongoose.Schema.ObjectId,
+    ref: 'Category',
+    required: [true, 'A Post must specify the category'],
+  },
   createdAt: {
     type: Date,
     default: new Date().toDateString(),
   },
+});
+
+postSchema.pre(/^find/, function (next) {
+  this.populate({
+    path: 'user',
+    select: 'username profilePic',
+  });
+  next();
 });
 
 const Post = mongoose.model('Post', postSchema);
