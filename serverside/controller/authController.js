@@ -65,7 +65,7 @@ exports.loginUser = async (req, res) => {
 
     const token = createToken(user._id, res);
     user.password = undefined;
-    console.log('cookie =>', req.headers.authorization);
+    console.log('cookie =>', req.headers);
     res.status(200).json({
       status: 'success',
       token,
@@ -164,7 +164,7 @@ exports.protectRoutes = async (req, res, next) => {
     console.log(verificationID);
     const loggedUser = await User.findById(verificationID.id);
     if (!loggedUser) throw new Error('No user found');
-    loggedUser.passwordupdated;
+    // loggedUser.passwordupdated;
     if (loggedUser.isPasswordUpdated(verificationID.iat))
       throw new Error('Authentication failed, Please login again!');
 
